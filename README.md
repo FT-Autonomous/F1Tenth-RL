@@ -13,7 +13,7 @@ $ cd Team-1
 $ docker build -t f1tenth_rl .
 ```
 
-**N.B. **don't forget the period at the end of the docker build command.
+**N.B.** don't forget the period at the end of the docker build command.
 
 #### 2. Running the Docker container
 
