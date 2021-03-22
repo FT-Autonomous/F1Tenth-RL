@@ -30,7 +30,7 @@ The next steps are similar to the Crash Course [Docker Setup Guide](https://gith
 - ##### Linux
 
   ```bash
-  $ rocker --x11 --device=/dev/dri/card0 f1tenth_rl
+  $ source docker-run.sh
   ```
 
 #### 3. Testing the installation
@@ -38,7 +38,7 @@ The next steps are similar to the Crash Course [Docker Setup Guide](https://gith
 Then you can run a quick way-point follow example once inside the container by:
 
 ```bash
-$ cd /home/Team-1/examples
+$ cd /home/formula/Team-1/f1tenth_gym/examples
 $ python3 waypoint_follow.py
 ```
 

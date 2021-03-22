@@ -27,40 +27,35 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get update --fix-missing && \
     DEBIAN_FRONTEND="noninteractive" apt-get install -y \
     python3-dev python3-pip
 
-RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y nano \
-                       git \
-                       unzip \
-                       build-essential \
-                       autoconf \
-                       libtool \
-                       cmake \
-                       vim
+RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y \
+    nano \
+    git \
+    unzip \
+    build-essential \
+    autoconf \
+    libtool \
+    cmake \
+    vim
 
 RUN pip3 install --upgrade pip
 
-RUN pip3 install numpy \
-                 scipy \
-                 numba \
-                 Pillow \
-                 gym \
-                 pyyaml \
-                 pyglet
+RUN pip3 install \
+    numpy \
+    scipy \
+    numba \
+    Pillow \
+    gym \
+    pyyaml \
+    pyglet
 
-# this isn't necessary, just a hack to make the terminal look better...
-RUN useradd -m Team-1 -u 1000 -g 0
+# add a user (kinda just a hack to make the terminal look better)
+RUN useradd -m formula -u 1000 -g 0
 
-# create home directory for code files
-ENV HOME /home/Team-1
-
-# copy repo from local computer into container
-COPY . /home/Team-1
-
-# install F110 Gym
-RUN cd /home/Team-1 && \
-    pip3 install -e gym/
+# set home directory
+ENV HOME /home/formula
 
 # open container in home folder
-WORKDIR /home/Team-1
+WORKDIR /home/formula/Team-1
 
-# opens terminal when container starts
+# opens terminal when container starts (also overrides SB3 Xvfb setup)
 ENTRYPOINT ["/bin/bash"]
