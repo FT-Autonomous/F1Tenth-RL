@@ -3,3 +3,4 @@
 .config
 dockerfile-build.log
 __pycache__
+train/
