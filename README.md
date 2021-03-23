@@ -15,7 +15,7 @@ $ cd Team-1
 
 #### 2. Running the Docker container
 
-You can build and run the environment in Docker, alongside **Stable Baselines 3** (our choice of RL library), by following these steps for your OS:
+You can build and run the environment in Docker, alongside **Stable Baselines 3** (our choice of RL library), by running these commands for your OS:
 
 - ##### Windows
 
@@ -52,7 +52,7 @@ import stable_baselines3
 print(stable_baselines3.__version__)
 ```
 
-#### 3. Writing code
+#### 4. Writing code
 
 - Open the folder containing this repository on your **host** machine, **not** in the Docker container, with your editor of choice and code away (VS Code is recommended)
 - To then run these files you will have to do this via the Docker container, which should be open in a seperate terminal from the earlier steps
