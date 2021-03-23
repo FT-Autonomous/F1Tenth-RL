@@ -8,20 +8,22 @@ set "ADAPTER=Wireless LAN ADAPTER WiFi"
 set "ADDRESS_TAG=IPv4 Address"
 
 @REM load in previous Dockerfile modification details
-set /p last_dockerfile_details=<dockerfile.log || echo Creating log file...
+set /p last_dockerfile_details=<dockerfile-build.log || echo Creating log file...
 set last_dockerfile_details=%last_dockerfile_details: =%
 @REM get current Dockerfile details
 for %%X in (Dockerfile) do set current_file_size=%%~zX & set current_file_time=%%~tX
 set current_dockerfile_details=%current_file_time%%current_file_size%
 set current_dockerfile_details=%current_dockerfile_details: =%
+
 @REM compare details to see if Dockerfile has been changed
 set "needs_build="
 if not "%current_dockerfile_details%" == "%last_dockerfile_details%" ( set "needs_build=y" )
 docker image inspect %IMAGE_NAME% 1>NUL 2>NUL || set "needs_build=y"
+
 @REM if Dockerfile has changed, then re-build the image
 if defined needs_build (
     docker build -t %IMAGE_NAME% . || (echo Build failed && pause && exit)
-    echo %current_file_time% %current_file_size% > dockerfile.log 
+    echo %current_file_time% %current_file_size% > dockerfile-build.log 
 )
 
 setlocal enabledelayedexpansion

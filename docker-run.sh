@@ -1,20 +1,34 @@
 #!/bin/sh
 
-CONTAINER_NAME=f110
+IMAGE_NAME=f110-rl-image
+CONTAINER_NAME=f110-rl-container
+REPO_DIRECTORY=/home/formula/Team-1
 
-# start background process which waits for container to start, then sets up the Gym
-{
-    i=0
-    while [ "$( docker container inspect -f '{{.State.Running}}' $CONTAINER_NAME)" != "true" ] && [ $i != 10 ]; do
-        sleep 0.5
-        let i=i+1
-    done
-    # try to run install command for F1Tenth Gym in container
-    docker exec -it $CONTAINER_NAME bash -c "cd /home/formula/Team-1/f1tenth_gym && pip3 install -e gym/"
-} >/dev/null 2>&1 & disown
+# load in previous Dockerfile modification details
+last_dockerfile_details=$(head -n 1 dockerfile-build.log) || last_dockerfile_details=x
+last_dockerfile_details="$(echo -e "${last_dockerfile_details}" | tr -d '[:space:]')"
+# get current Dockerfile details
+current_file_time=$(stat -c %y Dockerfile)
+current_file_size=$(stat --printf="%s" Dockerfile)
+current_dockerfile_details=$current_file_time$current_file_size
+current_dockerfile_details="$(echo -e "${current_dockerfile_details}" | tr -d '[:space:]')"
+
+#compare details to see if Dockerfile has been changed
+if [ $current_dockerfile_details != $last_dockerfile_details ] || ( ! docker image inspect $IMAGE_NAME >/dev/null 2>&1 ); then
+    # if Dockerfile has changed, then re-build the image
+    failed=false
+    docker build -t $IMAGE_NAME . || failed=true
+    if [ "$failed" == true ] ; then
+        echo "Build failed ---> check Dockerfile"
+        return
+    fi
+    echo "$current_file_time $current_file_size" > dockerfile-build.log
+fi
 
 # start up the F1TenthGym/StableBaselines3 container with the current repository mounted
-docker run -it \
+docker run \
+    -it \
+    --rm \
     --name $CONTAINER_NAME \
     --device /dev/dri/card0 \
     -e DISPLAY \
@@ -25,4 +39,4 @@ docker run -it \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     -v /etc/localtime:/etc/localtime:ro \
     -v $PWD:/home/formula/Team-1 \
-    f1tenth_rl
+    $IMAGE_NAME -c "cd $REPO_DIRECTORY/f1tenth_gym && pip3 install -e gym/ >/dev/null 2>&1 & clear; bash"
