@@ -3,34 +3,30 @@
 This repository contains all our code as well as the F1Tenth Gym repository, as a submodule. You can find the [documentation](https://f1tenth-gym.readthedocs.io/en/latest/) of the environment here.
 
 ## Quickstart
-#### 1. Installing the Docker image
+#### 1. Cloning the repository
 
 You can install the environment in Docker, alongside **Stable Baselines 3** (our choice of RL library), by running the following in a terminal:
 
 ```bash
 $ git clone --recurse-submodules https://github.com/FT-Autonomous/Team-1.git
 $ cd Team-1
-$ docker build -t f1tenth_rl .
 ```
 
-**N.B.** don't forget the period at the end of the docker build command.
+**N.B.** Don't forget to include the ```--recurse-submodules``` argument when cloning our repo, or else the F1Tenth Gym won't be cloned!
 
 #### 2. Running the Docker container
 
-The next steps are similar to the Crash Course [Docker Setup Guide](https://github.com/FT-Autonomous/Autonomous_Crash_Course/tree/main/docker-setup). With the Docker image built as above, you can run the container and enter into it by running this in the terminal:
+You can build and run the environment in Docker, alongside **Stable Baselines 3** (our choice of RL library), by following these steps for your OS:
 
 - ##### Windows
 
-  ```bash
-  $ docker run -it f1tenth_rl
-  ```
-
-  Then open **XLaunch**, as per David's guide
+  1. Double click on the ```docker-windows.bat``` file to open the script, which runs the Docker commands
+  2. Then open **XLaunch**, the same software used in David's [Docker Setup Guide](https://github.com/FT-Autonomous/Autonomous_Crash_Course/tree/main/docker-setup)
 
 - ##### Linux
 
   ```bash
-  $ source docker-run.sh
+  $ source docker-linux.sh
   ```
 
 #### 3. Testing the installation
