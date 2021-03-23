@@ -15,7 +15,7 @@ $ cd Team-1
 
 #### 2. Running the Docker container
 
-You can build and run the environment in Docker, alongside **Stable Baselines 3** (our choice of RL library), by running these commands for your OS:
+You can build and run the environment in Docker, alongside **Stable Baselines 3** (our choice of RL library), by running this command for your OS:
 
 - ##### Windows
 
