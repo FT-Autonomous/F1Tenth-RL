@@ -2,3 +2,4 @@
 .cache
 .config
 dockerfile-build.log
+__pycache__
