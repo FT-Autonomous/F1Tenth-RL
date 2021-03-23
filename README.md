@@ -3,9 +3,8 @@
 This repository contains all our code as well as the F1Tenth Gym repository, as a submodule. You can find the [documentation](https://f1tenth-gym.readthedocs.io/en/latest/) of the environment here.
 
 ## Quickstart
-#### 1. Cloning the repository
 
-You can install the environment in Docker, alongside **Stable Baselines 3** (our choice of RL library), by running the following in a terminal:
+#### 1. Cloning the repository
 
 ```bash
 $ git clone --recurse-submodules https://github.com/FT-Autonomous/Team-1.git
