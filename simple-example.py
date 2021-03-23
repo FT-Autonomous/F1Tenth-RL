@@ -16,7 +16,7 @@ from wrappers import F110_Wrapped
 
 ### TRAIN ###
 
-TRAIN_STEPS = pow(10, 3)
+TRAIN_STEPS = pow(10, 5) # for reference, it takes about one sec per 500 steps
 
 # create environment
 env = gym.make('f110_gym:f110-v0', map='./f1tenth_gym/examples/example_map', map_ext='.png', num_agents=1)

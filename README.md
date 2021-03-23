@@ -57,3 +57,9 @@ print(stable_baselines3.__version__)
 - Open the folder containing this repository on your **host** machine, **not** in the Docker container, with your editor of choice and code away (VS Code is recommended)
 - To then run these files you will have to do this via the Docker container, which should be open in a seperate terminal from the earlier steps
 - In summary: code on your host machine, run the code in your Docker container
+
+#### 5. Training and testing example
+
+You can do some initial training of an agent using the ```simple-example.py``` script; the first half trains an agent (poorly) and the second half runs the trained agent on the F1Tenth environment and renders it for you to see!
+
+Have a look at this file and change the training steps, models, and policies to try and improve the car's performance around the track. You can change the reward function by looking at the ```step(self, action)``` function in ```wrappers.py``` 
