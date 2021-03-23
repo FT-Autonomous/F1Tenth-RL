@@ -19,14 +19,22 @@ You can build and run the environment in Docker, alongside **Stable Baselines 3*
 
 - ##### Windows
 
-  1. Double click on the ```docker-windows.bat``` file to open the script, which runs the Docker commands
-  2. Then open **XLaunch**, the same software used in David's [Docker Setup Guide](https://github.com/FT-Autonomous/Autonomous_Crash_Course/tree/main/docker-setup)
+  ```bash
+  $ docker-windows.bat
+  ```
+  Then open **XLaunch**, the same software used in David's [Docker Setup Guide](https://github.com/FT-Autonomous/Autonomous_Crash_Course/tree/main/docker-setup)
 
 - ##### Linux
 
   ```bash
   $ source docker-linux.sh
   ```
+To build the GPU version of the Stable Baselines 3 container, append ```--gpu``` to the end of the above commands
+
+| Version       | Size          |
+| ------------- |:-------------:|
+| CPU           | 3.41 **GB**   |
+| GPU           | 6.86 **GB**   |
 
 #### 3. Testing the installation
 
@@ -43,3 +51,9 @@ To test the Stable Baselines 3 installation inside the Docker container, create 
 import stable_baselines3
 print(stable_baselines3.__version__)
 ```
+
+#### 3. Writing code
+
+- Open the folder containing this repository on your **host** machine, **not** in the Docker container, with your editor of choice and code away (VS Code is recommended)
+- To then run these files you will have to do this via the Docker container, which should be open in a seperate terminal from the earlier steps
+- In summary: code on your host machine, run the code in your Docker container
