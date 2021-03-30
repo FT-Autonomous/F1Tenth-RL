@@ -10,13 +10,13 @@ import numpy as np
 
 from datetime import datetime
 
-from stable_baselines3 import A2C
+from stable_baselines3 import PPO
 from wrappers import F110_Wrapped
 
 
 ### TRAIN ###
 
-TRAIN_STEPS = pow(10, 5) # for reference, it takes about one sec per 500 steps
+TRAIN_STEPS = pow(10, 4) # for reference, it takes about one sec per 500 steps
 
 # create environment
 env = gym.make('f110_gym:f110-v0', map='./f1tenth_gym/examples/example_map', map_ext='.png', num_agents=1)
@@ -25,7 +25,7 @@ env = gym.make('f110_gym:f110-v0', map='./f1tenth_gym/examples/example_map', map
 env = F110_Wrapped(env)
 
 # choose RL model and policy here
-model = A2C('MlpPolicy', env, verbose=1)
+model = PPO('MlpPolicy', env, verbose=1)
 
 # train model and record time taken
 start_time = time.time()
@@ -35,7 +35,7 @@ print('Training cycle complete.')
 
 # save model with unique timestamp
 timestamp = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-model.save(f"./train/a2c-f110-{timestamp}")
+model.save(f"./train/ppo-f110-{timestamp}")
 
 
 ### EVALUATE ###

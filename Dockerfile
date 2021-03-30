@@ -1,6 +1,6 @@
 # MIT License
 
-# Copyright (c) 2020 Joseph Auckley, Matthew O'Kelly, Aman Sinha, Hongrui Zheng
+# Copyright (c) 2020 FT Autonomous Team One
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -49,7 +49,9 @@ RUN pip3 install \
     Pillow \
     gym \
     pyyaml \
-    pyglet
+    pyglet \
+    shapely
+
 
 # add a user (kinda just a hack to make the terminal look better)
 RUN useradd -m formula -u 1000 -g 0
