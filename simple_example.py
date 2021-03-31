@@ -11,16 +11,16 @@ from datetime import datetime
 
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import SubprocVecEnv
+from stable_baselines3.common.env_util import make_vec_env
 
 from code.wrappers import F110_Wrapped
-from code.utility import make_vec_env
 
 
 TRAIN_STEPS = pow(10, 5)  # for reference, it takes about one sec per 500 steps
 MIN_EVAL_EPISODES = 5
 NUM_PROCESS = 4
-MAP_PATH = './f1tenth_gym/examples/example_map'
-MAP_EXTENSION = '.png'
+MAP_PATH = "./f1tenth_gym/examples/example_map"
+MAP_EXTENSION = ".png"
 
 
 def main():
@@ -29,23 +29,30 @@ def main():
     # TRAIN #
     #       #
 
-    # create parallelised environments
-    envs = make_vec_env('f110_gym:f110-v0',
+    # prepare the environment
+    def wrap_env():
+        # starts F110 gym
+        env = gym.make("f110_gym:f110-v0",
+                       map=MAP_PATH,
+                       map_ext=MAP_EXTENSION,
+                       num_agents=1)
+        # wrap basic gym with RL functions
+        env = F110_Wrapped(env)
+        return env
+
+    # vectorise environment (parallelise)
+    envs = make_vec_env(wrap_env,
                         n_envs=NUM_PROCESS,
-                        wrapper_class=F110_Wrapped,
-                        vec_env_cls=SubprocVecEnv,
-                        env_kwargs={'map': MAP_PATH,
-                                    'map_ext': MAP_EXTENSION,
-                                    'num_agents': 1})
+                        vec_env_cls=SubprocVecEnv)
 
     # choose RL model and policy here
-    model = PPO('MlpPolicy', envs, verbose=1)
+    model = PPO("MlpPolicy", envs, verbose=1)
 
     # train model and record time taken
     start_time = time.time()
     model.learn(total_timesteps=TRAIN_STEPS)
     print(f"Training time {time.time() - start_time:.2f}s")
-    print('Training cycle complete.')
+    print("Training cycle complete.")
 
     # save model with unique timestamp
     timestamp = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
@@ -56,10 +63,12 @@ def main():
     #          #
 
     # create evaluation environment (same as train environment in this case)
-    eval_env = gym.make('f110_gym:f110-v0',
-                        map='./f1tenth_gym/examples/example_map',
-                        map_ext='.png',
-                        num_agents=1)
+    eval_env = gym.make(
+        "f110_gym:f110-v0",
+        map="./f1tenth_gym/examples/example_map",
+        map_ext=".png",
+        num_agents=1,
+    )
 
     # wrap evaluation environment
     eval_env = F110_Wrapped(eval_env)
@@ -78,8 +87,8 @@ def main():
                 eval_env.render()
             # this section just asks the user if they want to run more episodes
             if episode == (MIN_EVAL_EPISODES - 1):
-                choice = input('Another episode? (Y/N) ')
-                if choice.replace(" ", "").lower() in ['y', 'yes']:
+                choice = input("Another episode? (Y/N) ")
+                if choice.replace(" ", "").lower() in ["y", "yes"]:
                     episode -= 1
                 else:
                     episode = MIN_EVAL_EPISODES

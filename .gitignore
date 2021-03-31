@@ -2,6 +2,7 @@
 .cache
 .config
 .vscode
+.empty
 __pycache__
 dockerfile-build.log
 train/
