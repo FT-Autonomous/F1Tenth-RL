@@ -4,10 +4,12 @@ IMAGE_NAME=f110-rl-image
 CONTAINER_NAME=f110-rl-container
 REPO_DIRECTORY=/home/formula/Team-1
 PARENT_IMAGE=stablebaselines/rl-baselines3-zoo-cpu
+GPU_FLAG=
 
 # choose which image to build from, CPU or GPU
 if [[ " $@ " =~ " --gpu " ]]; then
     PARENT_IMAGE=stablebaselines/rl-baselines3-zoo
+    GPU_FLAG="--gpus all"
 fi
 
 # load in previous Dockerfile modification details
@@ -19,7 +21,7 @@ current_file_size=$(stat --printf="%s" Dockerfile)
 current_dockerfile_details=$current_file_time$current_file_size$PARENT_IMAGE
 current_dockerfile_details="$(echo -e "${current_dockerfile_details}" | tr -d '[:space:]')"
 
-#compare details to see if Dockerfile has been changed
+# compare details to see if Dockerfile has been changed
 if [ $current_dockerfile_details != $last_dockerfile_details ] || ( ! docker image inspect $IMAGE_NAME >/dev/null 2>&1 ); then
     # if Dockerfile has changed, then re-build the image
     failed=false
@@ -40,6 +42,7 @@ docker run \
     --rm \
     --name $CONTAINER_NAME \
     --device /dev/dri/card0 \
+    $GPU_FLAG \
     -e DISPLAY \
     -e TERM \
     -e QT_X11_NO_MITSHM=1 \
