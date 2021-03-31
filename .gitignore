@@ -1,6 +1,7 @@
 .bash_history
 .cache
 .config
-dockerfile-build.log
+.vscode
 __pycache__
+dockerfile-build.log
 train/

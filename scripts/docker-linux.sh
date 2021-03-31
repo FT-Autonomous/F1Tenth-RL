@@ -36,6 +36,11 @@ if [ $current_dockerfile_details != $last_dockerfile_details ] || ( ! docker ima
     docker rmi $(docker images -f "dangling=true" -q) >/dev/null 2>&1
 fi
 
+# update temporary Docker authentication file
+rm /tmp/.docker.xauth >/dev/null 2>&1; \
+touch /tmp/.docker.xauth && \
+xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f /tmp/.docker.xauth nmerge -
+
 # start up the F1TenthGym/StableBaselines3 container with the current repository mounted
 docker run \
     -it \

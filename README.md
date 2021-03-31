@@ -15,7 +15,9 @@ $ cd Team-1
 
 #### 2. Running the Docker container
 
-You can build and run the environment in Docker, alongside **Stable Baselines 3** (our choice of RL library), by running this command for your OS:
+You can build and run the environment in Docker, alongside **Stable Baselines 3** (our choice of RL library), by running the corresponding command for your OS below.
+
+**Note:** The first time you run the command it will download and build your image, which will take a while.
 
 - ##### Windows
 
@@ -38,25 +40,22 @@ To build the GPU version of the Stable Baselines 3 container, append ```--gpu```
 
 #### 3. Testing the installation
 
-Then you can run a quick way-point follow example once inside the container by:
+To test the installations of Stable Baselines 3 and F1Tenth Gym, along with the F1Tenth Gym visuals, run these commands inside the Docker container :
 
 ```bash
-$ cd /home/formula/Team-1/f1tenth_gym/examples
-$ python3 waypoint_follow.py
-```
-
-To test the Stable Baselines 3 installation inside the Docker container, create a python script (e.g. foo.py) with the following code and run it with the terminal command ```python foo.py```
-
-```python
-import stable_baselines3
-print(stable_baselines3.__version__)
+$ cd /home/formula/Team-1
+$ python3 simple_example.py
 ```
 
 #### 4. Writing code
 
-- Open the folder containing this repository on your **host** machine, **not** in the Docker container, with your editor of choice and code away (VS Code is recommended)
-- To then run these files you will have to do this via the Docker container, which should be open in a seperate terminal from the earlier steps
-- In summary: code on your host machine, run the code in your Docker container
+You will need VS Code with the ```Remote - Containers``` extension installed, full extension name is ```ms-vscode-remote.remote-containers```
+
+- Start the Docker container as per the previous instructions, then open VS Code
+  - Open the VS Code command palette with the keyboard shortcut ```ctrl-shift-p``` 
+  - Search for and run the command ```Remote-Containers: Attach to Running Container```
+  - Choose the ```f110-rl-container```
+- To get code auto-completion working you will need to install the Python extension ```ms-python.python``` once VS Code has connected to the running container. You should also right click on the extension and click ```Add to devcontainer.json``` to load the extension automatically when you attach to the container. You can install any extensions you'd like inside the container but it will take up extra space.
 
 #### 5. Training and testing example
 
