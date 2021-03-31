@@ -1,3 +1,5 @@
+# Taken from StableBaselines3 make_vec_env
+
 import os
 import gym
 

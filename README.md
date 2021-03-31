@@ -20,14 +20,14 @@ You can build and run the environment in Docker, alongside **Stable Baselines 3*
 - ##### Windows
 
   ```bash
-  $ docker-windows.bat
+  $ ./scripts/docker-windows.bat
   ```
   Then open **XLaunch**, the same software used in David's [Docker Setup Guide](https://github.com/FT-Autonomous/Autonomous_Crash_Course/tree/main/docker-setup)
 
 - ##### Linux
 
   ```bash
-  $ source docker-linux.sh
+  $ source ./scripts/docker-linux.sh
   ```
 To build the GPU version of the Stable Baselines 3 container, append ```--gpu``` to the end of the above commands
 
