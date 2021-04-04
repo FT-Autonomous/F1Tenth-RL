@@ -6,6 +6,7 @@ environment while visualising it
 
 import gym
 import time
+import numpy as np
 
 from datetime import datetime
 
@@ -13,7 +14,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import SubprocVecEnv
 from stable_baselines3.common.env_util import make_vec_env
 
-from code.wrappers import F110_Wrapped
+from code.wrappers import F110_Wrapped, RandomMap
 
 
 TRAIN_STEPS = pow(10, 5)  # for reference, it takes about one sec per 500 steps
@@ -38,11 +39,13 @@ def main():
                        num_agents=1)
         # wrap basic gym with RL functions
         env = F110_Wrapped(env)
+        env = RandomMap(env, 1000)
         return env
 
     # vectorise environment (parallelise)
     envs = make_vec_env(wrap_env,
                         n_envs=NUM_PROCESS,
+                        seed=np.random.randint(pow(2, 32) - 1),
                         vec_env_cls=SubprocVecEnv)
 
     # choose RL model and policy here
@@ -63,12 +66,10 @@ def main():
     #          #
 
     # create evaluation environment (same as train environment in this case)
-    eval_env = gym.make(
-        "f110_gym:f110-v0",
-        map="./f1tenth_gym/examples/example_map",
-        map_ext=".png",
-        num_agents=1,
-    )
+    eval_env = gym.make("f110_gym:f110-v0",
+                        map="./f1tenth_gym/examples/example_map",
+                        map_ext=".png",
+                        num_agents=1)
 
     # wrap evaluation environment
     eval_env = F110_Wrapped(eval_env)

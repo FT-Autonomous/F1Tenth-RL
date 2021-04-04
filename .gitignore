@@ -1,8 +1,19 @@
+# runtime directories from Linux in Docker
 .bash_history
 .cache
 .config
-.vscode
 .empty
 __pycache__
+
+# config file for VS Code settings
+.vscode
+
+# docker build log
 dockerfile-build.log
+
+# trained models
 train/
+
+# generated map files
+maps/
+centerline/

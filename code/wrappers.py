@@ -25,6 +25,8 @@ import numpy as np
 
 from gym import spaces
 
+from code.random_trackgen import create_track, convert_track
+
 
 def convert_range(value, input_range, output_range):
     # converts value(s) from range to another range
@@ -101,3 +103,49 @@ class F110_Wrapped(gym.Wrapper):
     def normalise_observations(self, observations):
         # convert observations from normal lidar distances range to range [-1, 1]
         return convert_range(observations, [self.lidar_min, self.lidar_max], [-1, 1])
+
+
+class RandomMap(gym.Wrapper):
+    """
+    Generates random maps at chosen intervals, when resetting car,
+    and positions car at random point around new track
+    """
+
+    # stop function from trying to generate map after multiple failures
+    MAX_CREATE_ATTEMPTS = 20
+
+    def __init__(self, env, step_interval=1000):
+        super().__init__(env)
+        # initialise step counters
+        self.step_interval = step_interval
+        self.step_count = step_interval
+
+    def reset(self):
+        # check map update interval
+        if self.step_count >= self.step_interval:
+            # create map
+            for _ in range(self.MAX_CREATE_ATTEMPTS):
+                try:
+                    track, track_int, track_ext = create_track()
+                    convert_track(track, track_int, track_ext, self._seed)
+                    break
+                except Exception as e:
+                    print('Random generator failed: ', e)
+            # update map
+            self.env.update_map(f"./maps/map{self._seed}.yaml", ".png")
+            # reset counter
+            self.step_count = 0
+        # reset environment
+        return self.env.reset()
+
+
+    def step(self, action):
+        # increment class step counter
+        self.step_count += 1
+        # step environment
+        return self.env.step(action)
+
+    def seed(self, seed):
+        self._seed = seed
+        np.random.seed(self._seed)
+        print(f"Seed -> {self._seed}")
