@@ -15,21 +15,21 @@ $ cd Team-1
 
 #### 2. Running the Docker container
 
-You can build and run the environment in Docker, alongside **Stable Baselines 3** (our choice of RL library), by running the corresponding command for your OS below.
+You can build and run the environment in Docker, alongside **Stable Baselines 3** (our choice of RL library), by running the corresponding command for your OS below. Make sure you are in the main ```Team-1``` directory, the same place as the Dockerfile, when you run these commands.
 
 **Note:** The first time you run the command it will download and build your image, which will take a while.
 
 - ##### Windows
 
   ```bash
-  $ ./scripts/docker-windows.bat
+  $ call scripts/docker-windows.bat
   ```
   Then open **XLaunch**, the same software used in David's [Docker Setup Guide](https://github.com/FT-Autonomous/Autonomous_Crash_Course/tree/main/docker-setup)
 
 - ##### Linux
 
   ```bash
-  $ source ./scripts/docker-linux.sh
+  $ source scripts/docker-linux.sh
   ```
 To build the GPU version of the Stable Baselines 3 container, append ```--gpu``` to the end of the above commands
 
