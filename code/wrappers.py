@@ -109,6 +109,14 @@ class F110_Wrapped(gym.Wrapper):
         # convert observations from normal lidar distances range to range [-1, 1]
         return convert_range(observations, [self.lidar_min, self.lidar_max], [-1, 1])
 
+    def update_map(self, map_name, map_extension, update_render=True):
+        self.env.map_name = map_name
+        self.env.map_ext = map_extension
+        self.env.update_map(f"{map_name}.yaml", map_extension)
+        if update_render and self.env.renderer:
+            self.env.renderer.close()
+            self.env.renderer = None
+
 
 class RandomMap(gym.Wrapper):
     """
@@ -143,7 +151,7 @@ class RandomMap(gym.Wrapper):
                     print(
                         f"Random generator [{self._seed}] failed, trying again...")
             # update map
-            self.env.update_map(f"./maps/map{self._seed}.yaml", ".png")
+            self.update_map(f"./maps/map{self._seed}", ".png")
             # reset counter
             self.step_count = 0
         # reset environment

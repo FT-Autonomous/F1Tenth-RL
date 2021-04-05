@@ -39,7 +39,7 @@ def main():
                        num_agents=1)
         # wrap basic gym with RL functions
         env = F110_Wrapped(env)
-        env = RandomMap(env, 1000)
+        env = RandomMap(env, 3000)
         return env
 
     # vectorise environment (parallelise)
@@ -73,6 +73,8 @@ def main():
 
     # wrap evaluation environment
     eval_env = F110_Wrapped(eval_env)
+    eval_env = RandomMap(eval_env, 1000)
+    eval_env.seed(12345)
 
     # simulate a few episodes and render them, ctrl-c to cancel an episode
     episode = 0
