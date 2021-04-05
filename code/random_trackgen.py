@@ -37,7 +37,7 @@ from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 
 
-def create_track():
+def create_track(printing=False):
     CHECKPOINTS = 16
     SCALE = 6.0
     TRACK_RAD = 900/SCALE
@@ -138,7 +138,7 @@ def create_track():
         elif pass_through_start and i1==-1:
             i1 = i
             break
-    print("Track generation: %i..%i -> %i-tiles track" % (i1, i2, i2-i1))
+    if printing: print("Track generation: %i..%i -> %i-tiles track" % (i1, i2, i2-i1))
     assert i1!=-1
     assert i2!=-1
 
@@ -165,8 +165,7 @@ def create_track():
     return track_xy, track_xy_offset_in_np, track_xy_offset_out_np
 
 
-def convert_track(track, track_int, track_ext, iter):
-
+def convert_track(track, track_int, track_ext, iter, printing=False):
     # converts track to image and saves the centerline as waypoints
     fig, ax = plt.subplots()
     fig.set_size_inches(20, 20)
@@ -180,7 +179,7 @@ def convert_track(track, track_int, track_ext, iter):
     plt.savefig('maps/map' + str(iter) + '.png', dpi=80)
 
     map_width, map_height = fig.canvas.get_width_height()
-    print('map size: ', map_width, map_height)
+    if printing: print('map size: ', map_width, map_height)
 
     # transform the track center line into pixel coordinates
     xy_pixels = ax.transData.transform(track)

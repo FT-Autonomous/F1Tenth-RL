@@ -24,6 +24,7 @@ import gym
 import numpy as np
 
 from gym import spaces
+from pathlib import Path
 
 from code.random_trackgen import create_track, convert_track
 
@@ -47,10 +48,12 @@ class F110_Wrapped(gym.Wrapper):
         super().__init__(env)
 
         # normalised action space, steer and speed
-        self.action_space = spaces.Box(low=np.array([-1.0, -1.0]), high=np.array([1.0, 1.0]), dtype=np.float)
+        self.action_space = spaces.Box(low=np.array(
+            [-1.0, -1.0]), high=np.array([1.0, 1.0]), dtype=np.float)
 
         # normalised observations, just take the lidar scans
-        self.observation_space = spaces.Box(low=-1.0, high=1.0, shape=(1080,), dtype=np.float)
+        self.observation_space = spaces.Box(
+            low=-1.0, high=1.0, shape=(1080,), dtype=np.float)
 
         # store allowed steering/speed/lidar ranges for normalisation
         self.s_min = self.env.params['s_min']
@@ -68,7 +71,8 @@ class F110_Wrapped(gym.Wrapper):
         # TODO -> do some reward engineering here and mess around with this
 
         # currently setting the speed of the car to be a positive reward
-        vel_magnitude = np.linalg.norm([observation['linear_vels_x'][0], observation['linear_vels_y'][0]])
+        vel_magnitude = np.linalg.norm(
+            [observation['linear_vels_x'][0], observation['linear_vels_y'][0]])
         reward = vel_magnitude
 
         # penalise changes in car angular orientation (reward smoothness)
@@ -90,7 +94,8 @@ class F110_Wrapped(gym.Wrapper):
         rand_x = np.random.uniform(-1.0, 1.0)
         rand_y = np.random.uniform(-1.0, 1.0)
         rand_t = np.random.uniform(65.0, 125.0)
-        observation, _, _, _ = self.env.reset(np.array([[rand_x, rand_y, np.radians(rand_t)]]))
+        observation, _, _, _ = self.env.reset(
+            np.array([[rand_x, rand_y, np.radians(rand_t)]]))
         # reward, done, info can't be included in the Gym format
         return self.normalise_observations(observation['scans'][0])
 
@@ -114,11 +119,16 @@ class RandomMap(gym.Wrapper):
     # stop function from trying to generate map after multiple failures
     MAX_CREATE_ATTEMPTS = 20
 
-    def __init__(self, env, step_interval=1000):
+    def __init__(self, env, step_interval=5000):
         super().__init__(env)
         # initialise step counters
         self.step_interval = step_interval
         self.step_count = step_interval
+        # delete old maps and centerlines
+        for f in Path('centerline').glob('*'):
+            f.unlink()
+        for f in Path('maps').glob('*'):
+            f.unlink()
 
     def reset(self):
         # check map update interval
@@ -129,15 +139,15 @@ class RandomMap(gym.Wrapper):
                     track, track_int, track_ext = create_track()
                     convert_track(track, track_int, track_ext, self._seed)
                     break
-                except Exception as e:
-                    print('Random generator failed: ', e)
+                except Exception:
+                    print(
+                        f"Random generator [{self._seed}] failed, trying again...")
             # update map
             self.env.update_map(f"./maps/map{self._seed}.yaml", ".png")
             # reset counter
             self.step_count = 0
         # reset environment
         return self.env.reset()
-
 
     def step(self, action):
         # increment class step counter

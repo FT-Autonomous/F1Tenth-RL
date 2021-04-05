@@ -97,5 +97,6 @@ def main():
             pass
 
 
+# necessary for Python multi-processing
 if __name__ == "__main__":
     main()
