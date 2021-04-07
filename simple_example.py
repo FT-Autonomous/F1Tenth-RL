@@ -74,7 +74,7 @@ def main():
     # wrap evaluation environment
     eval_env = F110_Wrapped(eval_env)
     eval_env = RandomMap(eval_env, 1000)
-    eval_env.seed(12345)
+    eval_env.seed(np.random.randint(pow(2, 32) - 1))
 
     # simulate a few episodes and render them, ctrl-c to cancel an episode
     episode = 0

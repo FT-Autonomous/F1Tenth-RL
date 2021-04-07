@@ -17,3 +17,6 @@ train/
 # generated map files
 maps/
 centerline/
+
+# tensorboard
+*tensorboard

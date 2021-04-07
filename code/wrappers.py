@@ -63,6 +63,15 @@ class F110_Wrapped(gym.Wrapper):
         self.lidar_min = 0
         self.lidar_max = 30  # see ScanSimulator2D max_range
 
+        # store car dimensions and some track info
+        self.car_length = self.env.params['length']
+        self.car_width = self.env.params['width']
+        self.track_width = 3.2  # ~= track width, see random_trackgen.py
+
+        # radius of circle where car can start on track, relative to a centerpoint
+        self.start_radius = (self.track_width / 2) - \
+            ((self.car_length + self.car_width) / 2)  # just extra wiggle room
+
     def step(self, action):
         # convert normalised actions (from RL algorithms) back to actual actions for simulator
         action_convert = self.un_normalise_actions(action)
@@ -89,13 +98,31 @@ class F110_Wrapped(gym.Wrapper):
 
         return self.normalise_observations(observation['scans'][0]), reward, bool(done), info
 
-    def reset(self):
-        # should start off in slightly different positions to help with training
-        rand_x = np.random.uniform(-1.0, 1.0)
-        rand_y = np.random.uniform(-1.0, 1.0)
-        rand_t = np.random.uniform(65.0, 125.0)
-        observation, _, _, _ = self.env.reset(
-            np.array([[rand_x, rand_y, np.radians(rand_t)]]))
+    def reset(self, start_xy=None, direction=None):
+        # should start off in slightly different position every time
+        # position car anywhere along line from wall to wall facing
+        # car will never face backwards, can face forwards at an angle
+
+        # start from origin if no pose input
+        if start_xy is None:
+            start_xy = np.zeros(2)
+        # start in random direction if no direction input
+        if direction is None:
+            direction = np.random.uniform(0, 2 * np.pi)
+        # get slope perpendicular to track direction
+        slope = np.tan(direction + np.pi / 2)
+        # get magintude of slope to normalise parametric line
+        magnitude = np.sqrt(1 + np.power(slope, 2))
+        # get random point along line of width track
+        rand_offset = np.random.uniform(-1, 1)
+        rand_offset_scaled = rand_offset * self.start_radius
+        # convert position along line to position between walls at current point
+        x, y = start_xy + rand_offset_scaled * np.array([1, slope]) / magnitude
+        # point car in random forward direction, not aiming at walls
+        t = -np.random.uniform(max(-rand_offset * np.pi / 2, 0) - np.pi / 2,
+                               min(-rand_offset * np.pi / 2, 0) + np.pi / 2) + direction
+        # reset car with chosen pose
+        observation, _, _, _ = self.env.reset(np.array([[x, y, t]]))
         # reward, done, info can't be included in the Gym format
         return self.normalise_observations(observation['scans'][0])
 
@@ -116,6 +143,11 @@ class F110_Wrapped(gym.Wrapper):
         if update_render and self.env.renderer:
             self.env.renderer.close()
             self.env.renderer = None
+
+    def seed(self, seed):
+        self.current_seed = seed
+        np.random.seed(self.current_seed)
+        print(f"Seed -> {self.current_seed}")
 
 
 class RandomMap(gym.Wrapper):
@@ -145,25 +177,33 @@ class RandomMap(gym.Wrapper):
             for _ in range(self.MAX_CREATE_ATTEMPTS):
                 try:
                     track, track_int, track_ext = create_track()
-                    convert_track(track, track_int, track_ext, self._seed)
+                    convert_track(track,
+                                  track_int,
+                                  track_ext,
+                                  self.current_seed)
                     break
                 except Exception:
                     print(
-                        f"Random generator [{self._seed}] failed, trying again...")
+                        f"Random generator [{self.current_seed}] failed, trying again...")
             # update map
-            self.update_map(f"./maps/map{self._seed}", ".png")
+            self.update_map(f"./maps/map{self.current_seed}", ".png")
             # reset counter
             self.step_count = 0
+            # store waypoints
+            self.waypoints = np.genfromtxt(f"centerline/map{self.current_seed}.csv",
+                                           delimiter=',')
+        # get random starting position from centerline
+        random_index = np.random.randint(len(self.waypoints))
+        start_xy = self.waypoints[random_index]
+        next_xy = self.waypoints[(random_index + 1) % len(self.waypoints)]
+        # get forward direction by pointing at next point
+        direction = np.arctan2(next_xy[1] - start_xy[1],
+                               next_xy[0] - start_xy[0])
         # reset environment
-        return self.env.reset()
+        return self.env.reset(start_xy=start_xy, direction=direction)
 
     def step(self, action):
         # increment class step counter
         self.step_count += 1
         # step environment
         return self.env.step(action)
-
-    def seed(self, seed):
-        self._seed = seed
-        np.random.seed(self._seed)
-        print(f"Seed -> {self._seed}")
