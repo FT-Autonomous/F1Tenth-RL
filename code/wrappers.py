@@ -72,6 +72,9 @@ class F110_Wrapped(gym.Wrapper):
         self.start_radius = (self.track_width / 2) - \
             ((self.car_length + self.car_width) / 2)  # just extra wiggle room
 
+        # set threshold for maximum angle of car, to prevent spinning
+        self.max_theta = 100
+
     def step(self, action):
         # convert normalised actions (from RL algorithms) back to actual actions for simulator
         action_convert = self.un_normalise_actions(action)
@@ -83,6 +86,10 @@ class F110_Wrapped(gym.Wrapper):
         vel_magnitude = np.linalg.norm(
             [observation['linear_vels_x'][0], observation['linear_vels_y'][0]])
         reward = vel_magnitude
+
+        # end episode if car is spinning
+        if abs(observation['poses_theta'][0]) > self.max_theta:
+            done = True
 
         # penalise changes in car angular orientation (reward smoothness)
         # ang_magnitude = abs(observation['ang_vels_z'][0])

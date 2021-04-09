@@ -5,11 +5,18 @@ CONTAINER_NAME=f110-rl-container
 REPO_DIRECTORY=/home/formula/Team-1
 PARENT_IMAGE=stablebaselines/rl-baselines3-zoo-cpu
 GPU_FLAG=
+DETACHED_FLAG="-i"
 
 # choose which image to build from, CPU or GPU
 if [[ " $@ " =~ " --gpu " ]]; then
     PARENT_IMAGE=stablebaselines/rl-baselines3-zoo
     GPU_FLAG="--gpus all"
+fi
+
+# choose whether to run container in background or not (for cloud server)
+# default is interactive
+if [[ " $@ " =~ " -d " ]]; then
+    DETACHED_FLAG="-d"
 fi
 
 # load in previous Dockerfile modification details
@@ -43,7 +50,8 @@ xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f /tmp/.docker.xauth nmer
 
 # start up the F1TenthGym/StableBaselines3 container with the current repository mounted
 docker run \
-    -it \
+    -t \
+    $DETACHED_FLAG \
     --rm \
     --name $CONTAINER_NAME \
     --device /dev/dri/card0 \

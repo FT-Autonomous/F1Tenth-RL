@@ -17,3 +17,9 @@ centerline/
 
 # tensorboard
 *tensorboard
+
+# monitor logging
+tmp/
+
+# weights and biases
+wandb/
