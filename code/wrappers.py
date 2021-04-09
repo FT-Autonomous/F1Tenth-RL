@@ -171,11 +171,6 @@ class RandomMap(gym.Wrapper):
         # initialise step counters
         self.step_interval = step_interval
         self.step_count = step_interval
-        # delete old maps and centerlines
-        for f in Path('centerline').glob('*'):
-            f.unlink()
-        for f in Path('maps').glob('*'):
-            f.unlink()
 
     def reset(self):
         # check map update interval
@@ -214,3 +209,20 @@ class RandomMap(gym.Wrapper):
         self.step_count += 1
         # step environment
         return self.env.step(action)
+
+    def seed(self, seed):
+        # seed class
+        self.env.seed(seed)
+        # delete old maps and centerlines
+        for f in Path('centerline').glob('*'):
+            if not ((seed - 100) < int(''.join(filter(str.isdigit, str(f)))) < (seed + 100)):
+                try:
+                    f.unlink()
+                except:
+                    pass
+        for f in Path('maps').glob('*'):
+            if not ((seed - 100) < int(''.join(filter(str.isdigit, str(f)))) < (seed + 100)):
+                try:
+                    f.unlink()
+                except:
+                    pass

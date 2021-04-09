@@ -74,7 +74,7 @@ def main(args):
                                                        log_dir=log_dir,
                                                        save_dir=TRAIN_DIRECTORY,
                                                        use_wandb=args.wandb,
-                                                       always_save=True)
+                                                       always_save=args.save)
 
     # train model and record time taken
     start_time = time.time()
@@ -92,6 +92,12 @@ def main(args):
 
 
 def load_model(load_arg, train_directory, envs, tensorboard_path=None, evaluating=False):
+    '''
+    Slighly convoluted function that either creates a new model as specified below
+    in the "create new model" section, or loads in the latest trained
+    model (or user specified model) to continue training
+    '''
+    
     # create new model
     if (load_arg is None) and (not evaluating):
         print("Creating new model...")
@@ -140,6 +146,10 @@ if __name__ == "__main__":
     parser.add_argument("-w",
                         "--wandb",
                         help="use Weights and Biases API",
+                        action="store_true")
+    parser.add_argument("-s",
+                        "--save",
+                        help="always save at step interval",
                         action="store_true")
     args = parser.parse_args()
     # call main training function

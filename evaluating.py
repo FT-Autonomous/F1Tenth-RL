@@ -23,7 +23,7 @@ MAP_EXTENSION = ".png"
 MAP_CHANGE_INTERVAL = 3000
 
 
-def main():
+def main(args):
 
     #          #
     # EVALUATE #
@@ -48,7 +48,8 @@ def main():
     eval_env.seed(np.random.randint(pow(2, 32) - 1))
 
     # load or create model
-    model, _ = load_model(TRAIN_DIRECTORY,
+    model, _ = load_model(args.load,
+                          TRAIN_DIRECTORY,
                           eval_env,
                           evaluating=True)
 
@@ -75,17 +76,15 @@ def main():
             pass
 
 
-def load_model(train_directory, envs, tensorboard_path=None, evaluating=False):
-    # parse arguments to script
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-l",
-                        "--load",
-                        help="load previous model",
-                        nargs="?",
-                        const="latest")
-    args = parser.parse_args()
+def load_model(load_arg, train_directory, envs, tensorboard_path=None, evaluating=False):
+    '''
+    Slighly convoluted function that either creates a new model as specified below
+    in the "create new model" section, or loads in the latest trained
+    model (or user specified model) to continue training
+    '''
+    
     # create new model
-    if (args.load is None) and (not evaluating):
+    if (load_arg is None) and (not evaluating):
         print("Creating new model...")
         reset_num_timesteps = True
         model = PPO("MlpPolicy",
@@ -98,14 +97,14 @@ def load_model(train_directory, envs, tensorboard_path=None, evaluating=False):
         # get trained model list
         trained_models = glob.glob(f"{train_directory}/*")
         # latest model
-        if (args.load == "latest") or (args.load is None):
+        if (load_arg == "latest") or (load_arg is None):
             model_path = max(trained_models, key=os.path.getctime)
         else:
             trained_models_sorted = sorted(trained_models,
                                            key=os.path.getctime,
                                            reverse=True)
             # match user input to model names
-            model_path = [m for m in trained_models_sorted if args.load in m]
+            model_path = [m for m in trained_models_sorted if load_arg in m]
             model_path = model_path[0]
         # get plain model name for printing
         model_name = model_path.replace(".zip", '')
@@ -122,4 +121,13 @@ def load_model(train_directory, envs, tensorboard_path=None, evaluating=False):
 
 # necessary for Python multi-processing (not needed in evaluating)
 if __name__ == "__main__":
-    main()
+    # parse runtime arguments to script
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-l",
+                        "--load",
+                        help="load previous model",
+                        nargs="?",
+                        const="latest")
+    args = parser.parse_args()
+    # call main training function
+    main(args)
