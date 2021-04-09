@@ -30,6 +30,8 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
         self.best_mean_reward = -np.inf
         self.use_wandb = use_wandb
         self.always_save = always_save
+        # step counter for most recent save
+        self.last_check = 0
 
     def _init_callback(self) -> None:
         # Create folder if needed
@@ -37,7 +39,10 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
             os.makedirs(self.save_path, exist_ok=True)
 
     def _on_step(self) -> bool:
-        if self.n_calls % self.check_freq == 0:
+        if self.num_timesteps > (self.last_check + self.check_freq):
+
+            # update last check counter
+            self.last_check = self.num_timesteps
 
             # Retrieve training reward
             x, y = ts2xy(load_results(self.log_dir), 'timesteps')
