@@ -11,9 +11,6 @@ __pycache__
 # docker build log
 dockerfile-build.log
 
-# trained models
-train/
-
 # generated map files
 maps/
 centerline/

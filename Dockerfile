@@ -50,7 +50,11 @@ RUN pip3 install \
     gym \
     pyyaml \
     pyglet \
-    shapely
+    shapely \
+    wandb \
+    pylint
+
+RUN conda install -y autopep8
 
 
 # add a user (kinda just a hack to make the terminal look better)

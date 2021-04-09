@@ -56,4 +56,4 @@ docker run ^
     --rm ^
     --name %CONTAINER_NAME% ^
     -v "%cd%":%REPO_DIRECTORY% ^
-    %IMAGE_NAME% -c "cd %REPO_DIRECTORY%/f1tenth_gym && pip3 install -e gym/ >/dev/null 2>&1 & export DISPLAY=%address%:0.0; clear; bash"
+    %IMAGE_NAME% -c "cd %REPO_DIRECTORY%/f1tenth_gym && pip3 install -e gym/ >/dev/null 2>&1 & export DISPLAY=%address%:0.0; clear; export LC_ALL=C.UTF-8 LANG=C.UTF-8; bash"

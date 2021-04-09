@@ -56,7 +56,7 @@ docker run \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     -v /etc/localtime:/etc/localtime:ro \
     -v $PWD:$REPO_DIRECTORY \
-    $IMAGE_NAME -c "cd $REPO_DIRECTORY/f1tenth_gym && pip3 install -e gym/ >/dev/null 2>&1 & clear; bash"
+    $IMAGE_NAME -c "cd $REPO_DIRECTORY/f1tenth_gym && pip3 install -e gym/ >/dev/null 2>&1 & clear; export LC_ALL=C.UTF-8 LANG=C.UTF-8; bash"
 
 # clean up leftover directories from container
 rm -rf .cache/ .config/
