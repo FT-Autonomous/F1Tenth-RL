@@ -156,6 +156,18 @@ class F110_Wrapped(gym.Wrapper):
         np.random.seed(self.current_seed)
         print(f"Seed -> {self.current_seed}")
 
+#    def get_distance():
+#       centerline = self.waypoints
+#        x1 = observation['poses_x'][0]
+#        y1 = observation['poses_y'][0]
+#        dist = 10
+#        i = 0
+#        while dist < 1:
+#            dist = np.sqrt(np.power((x1 - centerline[0][i]), 2) + np.power((y1 - centerline[1][i]), 2))
+#            i += 1
+#        completion = (i / len(centerline)) * 100
+#        return completion
+
 
 class RandomMap(gym.Wrapper):
     """
