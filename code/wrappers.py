@@ -1,6 +1,6 @@
 # MIT License
 
-# Copyright (c) 2020 FT Autonomous Team One
+# Copyright (c) 2021 Eoin Gogarty, Charlie Maguire and Manus McAuliffe (Formula Trintiy Autonomous)
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
