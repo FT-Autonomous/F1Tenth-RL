@@ -1,6 +1,8 @@
-# F1Tenth Team 1
+# F1Tenth PPO
 
-This repository contains all our code as well as the F1Tenth Gym repository, as a submodule. You can find the [documentation](https://f1tenth-gym.readthedocs.io/en/latest/) of the environment here.
+This repository contains all our code as well as an F1Tenth Gym repository fork, as a submodule. You can find the [documentation](https://f1tenth-gym.readthedocs.io/en/latest/) of the F1Tenth Gym environment here.
+
+This is an implementation of a simple reinforcement learning (RL) algorithm for teaching an F1Tenth car to race using a simple proximal policy optimization (PPO) algorithm. Random race tracks are used to help the agent adapt to different environments.
 
 ## Quickstart
 
@@ -33,10 +35,10 @@ You can build and run the environment in Docker, alongside **Stable Baselines 3*
   ```
 To build the GPU version of the Stable Baselines 3 container, append ```--gpu``` to the end of the above commands
 
-| Version       | Size          |
-| ------------- |:-------------:|
-| CPU           | 3.41 **GB**   |
-| GPU           | 6.86 **GB**   |
+| Version |    Size     |
+| ------- | :---------: |
+| CPU     | 3.41 **GB** |
+| GPU     | 6.86 **GB** |
 
 #### 3. Testing the installation
 
@@ -62,3 +64,6 @@ You will need VS Code with the ```Remote - Containers``` extension installed, fu
 You can do some initial training of an agent using the ```simple-example.py``` script; the first half trains an agent (poorly) and the second half runs the trained agent on the F1Tenth environment and renders it for you to see!
 
 Have a look at this file and change the training steps, models, and policies to try and improve the car's performance around the track. You can change the reward function by looking at the ```step(self, action)``` function in ```wrappers.py``` 
+
+# Acknowledgements
+Thanks to [Eoin Gogarty](https://github.com/avantgarda) as the lead developer of the F1Tenth Gym training and evaluation framework, and [Charlie Maguire](https://github.com/maguic11) and [Manus McAuliffe](https://github.com/mmcaulif) for contributing ideas and parts towards development.
