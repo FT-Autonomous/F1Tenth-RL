@@ -67,3 +67,16 @@ Have a look at this file and change the training steps, models, and policies to 
 
 # Acknowledgements
 Thanks to [Eoin Gogarty](https://github.com/avantgarda) as the lead developer of the F1Tenth Gym training and evaluation framework, and [Charlie Maguire](https://github.com/maguic11) and [Manus McAuliffe](https://github.com/mmcaulif) for contributing ideas and parts towards development.
+
+# F1TENTH
+If you find F1Tenth Gym as interesting to use as we did, you can cite them and include the licenses in your code. Bibtex citation below.
+```
+@inproceedings{okelly2020f1tenth,
+  title={F1TENTH: An Open-source Evaluation Environment for Continuous Control and Reinforcement Learning},
+  author={O’Kelly, Matthew and Zheng, Hongrui and Karthik, Dhruv and Mangharam, Rahul},
+  booktitle={NeurIPS 2019 Competition and Demonstration Track},
+  pages={77--89},
+  year={2020},
+  organization={PMLR}
+}
+```
