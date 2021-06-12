@@ -25,26 +25,30 @@ Sample python script to show the process of choosing a Stable Baselines model,
 training it with a chosen policy, and then evaluating the trained model on the
 environment while visualising it
 """
+#if getting the module not found error run;
+#pip install --user -e gym/
 
 import gym
 import time
 import numpy as np
-
+import torch
+import os
+import argparse
 from datetime import datetime
-
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import SubprocVecEnv
 from stable_baselines3.common.env_util import make_vec_env
+from code.wrappers import F110_Wrapped, RandomMap, RandomF1TenthMap, ThrottleMaxSpeedReward
+from typing import Callable
 
-from code.wrappers import F110_Wrapped, RandomMap
-
-
-TRAIN_STEPS = pow(10, 5)  # for reference, it takes about one sec per 500 steps
-MIN_EVAL_EPISODES = 5
+TRAIN_DIRECTORY = "./train"
+TRAIN_STEPS = 5 * np.power(10, 4)    # for reference, it takes about one sec per 500 steps
+SAVE_CHECK_FREQUENCY = int(TRAIN_STEPS / 10)
+MIN_EVAL_EPISODES = 100
 NUM_PROCESS = 4
+#MAP_PATH = "./maps/map1517194083"
 MAP_PATH = "./f1tenth_gym/examples/example_map"
 MAP_EXTENSION = ".png"
-
 
 def main():
 
@@ -61,17 +65,41 @@ def main():
                        num_agents=1)
         # wrap basic gym with RL functions
         env = F110_Wrapped(env)
-        env = RandomMap(env, 3000)
+        #env = RandomMap(env, 3000)
+        env = RandomF1TenthMap(env, 3000)
+        env = ThrottleMaxSpeedReward(env,0,1,2.5,2.5)
         return env
 
     # vectorise environment (parallelise)
     envs = make_vec_env(wrap_env,
                         n_envs=NUM_PROCESS,
-                        seed=np.random.randint(pow(2, 32) - 1),
+                        seed=np.random.randint(pow(2, 31) - 1),
                         vec_env_cls=SubprocVecEnv)
 
+    #adaptive learning rate
+    def linear_schedule(initial_value: float) -> Callable[[float], float]:
+        """
+        Linear learning rate schedule.
+
+        :param initial_value: Initial learning rate.
+        :return: schedule that computes
+          current learning rate depending on remaining progress
+        """
+
+        def func(progress_remaining: float) -> float:
+            """
+            Progress will decrease from 1 (beginning) to 0.
+
+            :param progress_remaining:
+            :return: current learning rate
+            """
+            return progress_remaining * initial_value
+
+        return func
+
     # choose RL model and policy here
-    model = PPO("MlpPolicy", envs, verbose=1)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model = PPO("MlpPolicy", envs,  learning_rate=0.0003, gamma=0.99, gae_lambda=0.95, verbose=1, device='cpu')
 
     # train model and record time taken
     start_time = time.time()
@@ -95,8 +123,8 @@ def main():
 
     # wrap evaluation environment
     eval_env = F110_Wrapped(eval_env)
-    eval_env = RandomMap(eval_env, 1000)
-    eval_env.seed(np.random.randint(pow(2, 32) - 1))
+    eval_env = RandomF1TenthMap(eval_env, 1000)
+    eval_env.seed(np.random.randint(pow(2, 31) - 1))
 
     # simulate a few episodes and render them, ctrl-c to cancel an episode
     episode = 0
@@ -106,20 +134,11 @@ def main():
             obs = eval_env.reset()
             done = False
             while not done:
-                # use trained model to predict some action, using observations
                 action, _ = model.predict(obs)
-                obs, _, done, _ = eval_env.step(action)
+                obs, reward, done, _ = eval_env.step(action)
                 eval_env.render()
-            # this section just asks the user if they want to run more episodes
-            if episode == (MIN_EVAL_EPISODES - 1):
-                choice = input("Another episode? (Y/N) ")
-                if choice.replace(" ", "").lower() in ["y", "yes"]:
-                    episode -= 1
-                else:
-                    episode = MIN_EVAL_EPISODES
         except KeyboardInterrupt:
             pass
-
 
 # necessary for Python multi-processing
 if __name__ == "__main__":

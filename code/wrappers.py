@@ -1,6 +1,6 @@
 # MIT License
 
-# Copyright (c) 2021 Eoin Gogarty, Charlie Maguire and Manus McAuliffe (Formula Trintiy Autonomous)
+# Copyright (c) 2020 FT Autonomous Team One
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,8 @@ from pathlib import Path
 
 from code.random_trackgen import create_track, convert_track
 
+mapno = ["Austin","BrandsHatch","Budapest","Catalunya","Hockenheim","IMS","Melbourne","MexicoCity","Montreal","Monza","MoscowRaceway",
+         "Nuerburgring","Oschersleben","Sakhir","SaoPaulo","Sepang","Shanghai","Silverstone","Sochi","Spa","Spielberg","YasMarina","Zandvoort"]
 
 def convert_range(value, input_range, output_range):
     # converts value(s) from range to another range
@@ -36,7 +38,6 @@ def convert_range(value, input_range, output_range):
     in_range = in_max - in_min
     out_range = out_max - out_min
     return (((value - in_min) * out_range) / in_range) + out_min
-
 
 class F110_Wrapped(gym.Wrapper):
     """
@@ -72,17 +73,23 @@ class F110_Wrapped(gym.Wrapper):
         self.start_radius = (self.track_width / 2) - \
             ((self.car_length + self.car_width) / 2)  # just extra wiggle room
 
+        self.step_count = 0
+
         # set threshold for maximum angle of car, to prevent spinning
         self.max_theta = 100
+        self.count = 0
 
     def step(self, action):
         # convert normalised actions (from RL algorithms) back to actual actions for simulator
         action_convert = self.un_normalise_actions(action)
         observation, _, done, info = self.env.step(np.array([action_convert]))
 
-        # TODO -> do some reward engineering here and mess around with this
+        self.step_count += 1
 
-        # currently setting the speed of the car to be a positive reward
+        # TODO -> do some reward engineering here and mess around with this
+        reward = 0
+
+        #eoins reward function
         vel_magnitude = np.linalg.norm(
             [observation['linear_vels_x'][0], observation['linear_vels_y'][0]])
         reward = vel_magnitude
@@ -91,17 +98,58 @@ class F110_Wrapped(gym.Wrapper):
         if abs(observation['poses_theta'][0]) > self.max_theta:
             done = True
 
+        # reward function that returns percent of lap left, maybe try incorporate speed into the reward too
+        """with open(f"centerline/map{self.current_seed}.csv", 'rb')as csvfile:
+            waypoints = np.genfromtxt(csvfile, delimiter=',')
+
+        if self.count < len(waypoints):
+            wx, wy = waypoints[self.count]
+            X, Y = observation['poses_x'][0], observation['poses_y'][0]
+            dist = np.sqrt(np.power((X - wx), 2) + np.power((Y - wy), 2))
+            #print("Dist:", dist, " to waypoint: ", self.count + 1)
+            if dist > 2:
+                self.count += 1
+                complete = (self.count/len(waypoints)) * 0.5
+                #print("Percent complete: ", complete)
+                reward = complete
+        else:
+            self.count = 0
+
+        vel_magnitude = np.linalg.norm([observation['linear_vels_x'][0], observation['linear_vels_y'][0]])
+        #print("V:",vel_magnitude)
+        if vel_magnitude > 0.2:  # > 0 is very slow and safe, sometimes just stops in its tracks at corners
+            reward += 0.1"""
+
+
         # penalise changes in car angular orientation (reward smoothness)
-        # ang_magnitude = abs(observation['ang_vels_z'][0])
-        # if ang_magnitude > 10: ang_magnitude = 10
-        # reward = vel_magnitude - ang_magnitude
+        """ang_magnitude = abs(observation['ang_vels_z'][0])
+        #print("Ang:",ang_magnitude)
+        if ang_magnitude > 0.75:
+            reward += -ang_magnitude/10
+        ang_magnitude = abs(observation['ang_vels_z'][0])
+        if ang_magnitude > 5:
+            reward = -(vel_magnitude/10)
 
         # if collisions is true, then the car has crashed
-        # if observation['collisions'][0]:
-        #   reward = -1000
+        if observation['collisions'][0]:
+            self.count = 0
+            #reward = -100
+            reward = -1
+
+        # end episode if car is spinning
+        if abs(observation['poses_theta'][0]) > self.max_theta:
+            self.count = 0
+            reward = -100
+            reward = -1
+            done = True
 
         # just a simple counter that increments when the car completes a lap
-        # reward = self.env.lap_counts[0]
+        if self.env.lap_counts[0] > 0:
+            self.count = 0
+            reward += 1
+            if self.env.lap_counts[0] > 1:
+                reward += 1
+                self.env.lap_counts[0] = 0"""
 
         return self.normalise_observations(observation['scans'][0]), reward, bool(done), info
 
@@ -123,8 +171,10 @@ class F110_Wrapped(gym.Wrapper):
         # get random point along line of width track
         rand_offset = np.random.uniform(-1, 1)
         rand_offset_scaled = rand_offset * self.start_radius
+
         # convert position along line to position between walls at current point
         x, y = start_xy + rand_offset_scaled * np.array([1, slope]) / magnitude
+
         # point car in random forward direction, not aiming at walls
         t = -np.random.uniform(max(-rand_offset * np.pi / 2, 0) - np.pi / 2,
                                min(-rand_offset * np.pi / 2, 0) + np.pi / 2) + direction
@@ -155,18 +205,6 @@ class F110_Wrapped(gym.Wrapper):
         self.current_seed = seed
         np.random.seed(self.current_seed)
         print(f"Seed -> {self.current_seed}")
-
-#    def get_distance():
-#       centerline = self.waypoints
-#        x1 = observation['poses_x'][0]
-#        y1 = observation['poses_y'][0]
-#        dist = 10
-#        i = 0
-#        while dist < 1:
-#            dist = np.sqrt(np.power((x1 - centerline[0][i]), 2) + np.power((y1 - centerline[1][i]), 2))
-#            i += 1
-#        completion = (i / len(centerline)) * 100
-#        return completion
 
 
 class RandomMap(gym.Wrapper):
@@ -207,6 +245,66 @@ class RandomMap(gym.Wrapper):
         # get random starting position from centerline
         random_index = np.random.randint(len(self.waypoints))
         start_xy = self.waypoints[random_index]
+        print(start_xy)
+        next_xy = self.waypoints[(random_index + 1) % len(self.waypoints)]
+        # get forward direction by pointing at next point
+        direction = np.arctan2(next_xy[1] - start_xy[1],
+                               next_xy[0] - start_xy[0])
+        # reset environment
+        return self.env.reset(start_xy=start_xy, direction=direction)
+
+    def step(self, action):
+        # increment class step counter
+        self.step_count += 1
+        # step environment
+        return self.env.step(action)
+
+    def seed(self, seed):
+        # seed class
+        self.env.seed(seed)
+        # delete old maps and centerlines
+        for f in Path('centerline').glob('*'):
+            if not ((seed - 100) < int(''.join(filter(str.isdigit, str(f)))) < (seed + 100)):
+                try:
+                    f.unlink()
+                except:
+                    pass
+        for f in Path('maps').glob('*'):
+            if not ((seed - 100) < int(''.join(filter(str.isdigit, str(f)))) < (seed + 100)):
+                try:
+                    f.unlink()
+                except:
+                    pass
+
+class RandomF1TenthMap(gym.Wrapper):
+    """
+    Places the car in a random map from F1Tenth
+    """
+
+    # stop function from trying to generate map after multiple failures
+    MAX_CREATE_ATTEMPTS = 20
+
+    def __init__(self, env, step_interval=5000):
+        super().__init__(env)
+        # initialise step counters
+        self.step_interval = step_interval
+        self.step_count = 0
+
+    def reset(self):
+        # check map update interval
+        if self.step_count % self.step_interval == 0:
+            # update map
+            randmap = mapno[np.random.randint(low=0, high=22)]
+            #self.update_map(f"./maps/map{self.current_seed}", ".png")
+            self.update_map(f"./f1tenth_racetracks/{randmap}/{randmap}_map", ".png")
+            # store waypoints
+            #self.waypoints = np.genfromtxt(f"centerline/map{self.current_seed}.csv",delimiter=',')
+            self.waypoints = np.genfromtxt(f"./f1tenth_racetracks/{randmap}/{randmap}_centerline.csv", delimiter=',')
+
+        # get random starting position from centerline
+        random_index = np.random.randint(len(self.waypoints))
+        start_xy = self.waypoints[random_index]  #len = 4
+        start_xy = start_xy[:2]
         next_xy = self.waypoints[(random_index + 1) % len(self.waypoints)]
         # get forward direction by pointing at next point
         direction = np.arctan2(next_xy[1] - start_xy[1],
@@ -254,8 +352,7 @@ class ThrottleMaxSpeedReward(gym.RewardWrapper):
         self.end_max_reward = self.v_max if end_max_reward is None else end_max_reward
 
         # calculate slope for reward changing over time (steps)
-        self.reward_slope = (
-            self.end_max_reward - self.start_max_reward) / (self.end_step - self.start_step)
+        self.reward_slope = (self.end_max_reward - self.start_max_reward) / (self.end_step - self.start_step)
 
     def reward(self, reward):
         # maximum reward is start_max_reward
