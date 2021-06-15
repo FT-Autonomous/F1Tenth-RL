@@ -31,6 +31,9 @@ from code.random_trackgen import create_track, convert_track
 mapno = ["Austin","BrandsHatch","Budapest","Catalunya","Hockenheim","IMS","Melbourne","MexicoCity","Montreal","Monza","MoscowRaceway",
          "Nuerburgring","Oschersleben","Sakhir","SaoPaulo","Sepang","Shanghai","Silverstone","Sochi","Spa","Spielberg","YasMarina","Zandvoort"]
 
+randmap = mapno[0]
+globwaypoints = np.genfromtxt(f"./f1tenth_racetracks/{randmap}/{randmap}_centerline.csv", delimiter=',')
+
 def convert_range(value, input_range, output_range):
     # converts value(s) from range to another range
     # ranges ---> [min, max]
@@ -94,27 +97,27 @@ class F110_Wrapped(gym.Wrapper):
             [observation['linear_vels_x'][0], observation['linear_vels_y'][0]])
         reward = vel_magnitude
 
-        # end episode if car is spinning
-        if abs(observation['poses_theta'][0]) > self.max_theta:
-            done = True
-
         # reward function that returns percent of lap left, maybe try incorporate speed into the reward too
-        """with open(f"centerline/map{self.current_seed}.csv", 'rb')as csvfile:
-            waypoints = np.genfromtxt(csvfile, delimiter=',')
+        #waypoints = np.genfromtxt(f"./f1tenth_racetracks/{randmap}/{randmap}_centerline.csv", delimiter=',')
 
-        if self.count < len(waypoints):
-            wx, wy = waypoints[self.count]
+        if self.count < len(globwaypoints):
+            wx, wy = globwaypoints[self.count][:2]
             X, Y = observation['poses_x'][0], observation['poses_y'][0]
             dist = np.sqrt(np.power((X - wx), 2) + np.power((Y - wy), 2))
             #print("Dist:", dist, " to waypoint: ", self.count + 1)
             if dist > 2:
                 self.count += 1
-                complete = (self.count/len(waypoints)) * 0.5
+                complete = (self.count/len(globwaypoints)) * 0.5
                 #print("Percent complete: ", complete)
                 reward = complete
         else:
             self.count = 0
 
+        # end episode if car is spinning
+        if abs(observation['poses_theta'][0]) > self.max_theta:
+            done = True
+
+        """
         vel_magnitude = np.linalg.norm([observation['linear_vels_x'][0], observation['linear_vels_y'][0]])
         #print("V:",vel_magnitude)
         if vel_magnitude > 0.2:  # > 0 is very slow and safe, sometimes just stops in its tracks at corners
@@ -300,6 +303,7 @@ class RandomF1TenthMap(gym.Wrapper):
             # store waypoints
             #self.waypoints = np.genfromtxt(f"centerline/map{self.current_seed}.csv",delimiter=',')
             self.waypoints = np.genfromtxt(f"./f1tenth_racetracks/{randmap}/{randmap}_centerline.csv", delimiter=',')
+            globwaypoints = self.waypoints
 
         # get random starting position from centerline
         random_index = np.random.randint(len(self.waypoints))

@@ -46,8 +46,7 @@ TRAIN_STEPS = 5 * np.power(10, 4)    # for reference, it takes about one sec per
 SAVE_CHECK_FREQUENCY = int(TRAIN_STEPS / 10)
 MIN_EVAL_EPISODES = 100
 NUM_PROCESS = 4
-#MAP_PATH = "./maps/map1517194083"
-MAP_PATH = "./f1tenth_gym/examples/example_map"
+MAP_PATH = "./f1tenth_racetracks/Austin/Austin_map"
 MAP_EXTENSION = ".png"
 
 def main():
@@ -98,7 +97,7 @@ def main():
         return func
 
     # choose RL model and policy here
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") #RuntimeError: CUDA error: out of memory whenever I use gpu
     model = PPO("MlpPolicy", envs,  learning_rate=0.0003, gamma=0.99, gae_lambda=0.95, verbose=1, device='cpu')
 
     # train model and record time taken
