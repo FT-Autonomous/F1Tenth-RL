@@ -27,6 +27,7 @@ environment while visualising it
 """
 #if getting the module not found error run;
 #pip install --user -e gym/
+#in the f1tenth_gym folder
 
 import gym
 import time
@@ -38,14 +39,16 @@ from datetime import datetime
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import SubprocVecEnv
 from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.common.callbacks import CheckpointCallback
 from code.wrappers import F110_Wrapped, RandomMap, RandomF1TenthMap, ThrottleMaxSpeedReward
-from typing import Callable
+from code.manus_callbacks import SaveOnBestTrainingRewardCallback
+from code.schedulers import linear_schedule
 
 TRAIN_DIRECTORY = "./train"
 TRAIN_STEPS = 5 * np.power(10, 4)    # for reference, it takes about one sec per 500 steps
 SAVE_CHECK_FREQUENCY = int(TRAIN_STEPS / 10)
 MIN_EVAL_EPISODES = 100
-NUM_PROCESS = 4
+NUM_PROCESS = 2
 MAP_PATH = "./f1tenth_racetracks/Austin/Austin_map"
 MAP_EXTENSION = ".png"
 
@@ -66,7 +69,8 @@ def main():
         env = F110_Wrapped(env)
         #env = RandomMap(env, 3000)
         env = RandomF1TenthMap(env, 3000)
-        env = ThrottleMaxSpeedReward(env,0,1,2.5,2.5)
+        #env = ThrottleMaxSpeedReward(env,0,1,2.5,2.5)
+        #env = ThrottleMaxSpeedReward(env, 0, int(0.75 * TRAIN_STEPS), 2.5) #this is what eoin used in the code on weights and biases
         return env
 
     # vectorise environment (parallelise)
@@ -75,34 +79,14 @@ def main():
                         seed=np.random.randint(pow(2, 31) - 1),
                         vec_env_cls=SubprocVecEnv)
 
-    #adaptive learning rate
-    def linear_schedule(initial_value: float) -> Callable[[float], float]:
-        """
-        Linear learning rate schedule.
-
-        :param initial_value: Initial learning rate.
-        :return: schedule that computes
-          current learning rate depending on remaining progress
-        """
-
-        def func(progress_remaining: float) -> float:
-            """
-            Progress will decrease from 1 (beginning) to 0.
-
-            :param progress_remaining:
-            :return: current learning rate
-            """
-            return progress_remaining * initial_value
-
-        return func
-
     # choose RL model and policy here
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") #RuntimeError: CUDA error: out of memory whenever I use gpu
     model = PPO("MlpPolicy", envs,  learning_rate=0.0003, gamma=0.99, gae_lambda=0.95, verbose=1, device='cpu')
+    checkpoint_callback = CheckpointCallback(save_freq=SAVE_CHECK_FREQUENCY,save_path='./train_test/',name_prefix='rl_model_checkpoint')
 
     # train model and record time taken
     start_time = time.time()
-    model.learn(total_timesteps=TRAIN_STEPS)
+    model.learn(total_timesteps=TRAIN_STEPS, callback=checkpoint_callback)
     print(f"Training time {time.time() - start_time:.2f}s")
     print("Training cycle complete.")
 
@@ -116,13 +100,13 @@ def main():
 
     # create evaluation environment (same as train environment in this case)
     eval_env = gym.make("f110_gym:f110-v0",
-                        map="./f1tenth_gym/examples/example_map",
-                        map_ext=".png",
+                        map=MAP_PATH,
+                        map_ext=MAP_EXTENSION,
                         num_agents=1)
 
     # wrap evaluation environment
     eval_env = F110_Wrapped(eval_env)
-    eval_env = RandomF1TenthMap(eval_env, 1000)
+    eval_env = RandomF1TenthMap(eval_env, 500)
     eval_env.seed(np.random.randint(pow(2, 31) - 1))
 
     # simulate a few episodes and render them, ctrl-c to cancel an episode
