@@ -23,4 +23,6 @@ tmp/
 
 # weights and biases
 wandb/
-/train_test/
+
+#train folder
+train_test/
