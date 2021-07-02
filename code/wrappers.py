@@ -95,7 +95,7 @@ class F110_Wrapped(gym.Wrapper):
         #eoins reward function
         vel_magnitude = np.linalg.norm(
             [observation['linear_vels_x'][0], observation['linear_vels_y'][0]])
-        reward = vel_magnitude
+        reward = vel_magnitude #/10 maybe include if speed is having too much of an effect
 
         # reward function that returns percent of lap left, maybe try incorporate speed into the reward too
         #waypoints = np.genfromtxt(f"./f1tenth_racetracks/{randmap}/{randmap}_centerline.csv", delimiter=',')
@@ -109,9 +109,14 @@ class F110_Wrapped(gym.Wrapper):
                 self.count += 1
                 complete = (self.count/len(globwaypoints)) * 0.5
                 #print("Percent complete: ", complete)
-                reward = complete
+                reward += complete
         else:
             self.count = 0
+
+        if observation['collisions'][0]:
+            self.count = 0
+            # reward = -100
+            reward = -1
 
         # end episode if car is spinning
         if abs(observation['poses_theta'][0]) > self.max_theta:

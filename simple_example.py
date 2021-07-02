@@ -48,7 +48,7 @@ TRAIN_DIRECTORY = "./train"
 TRAIN_STEPS = 1.5 * np.power(10, 5)    # for reference, it takes about one sec per 500 steps
 SAVE_CHECK_FREQUENCY = int(TRAIN_STEPS / 10)
 MIN_EVAL_EPISODES = 100
-NUM_PROCESS = 3
+NUM_PROCESS = 4
 MAP_PATH = "./f1tenth_racetracks/Austin/Austin_map"
 MAP_EXTENSION = ".png"
 
@@ -69,8 +69,8 @@ def main():
         env = F110_Wrapped(env)
         #env = RandomMap(env, 3000)
         env = RandomF1TenthMap(env, 3000)
-        env = ThrottleMaxSpeedReward(env,0,1,2.5,2.5)
-        #env = ThrottleMaxSpeedReward(env, 0, int(0.75 * TRAIN_STEPS), 2.5) #this is what eoin used in the code on weights and biases
+        #env = ThrottleMaxSpeedReward(env,0,1,2.5,2.5)
+        env = ThrottleMaxSpeedReward(env, 0, int(0.75 * TRAIN_STEPS), 2.5) #this is what eoin used in the code on weights and biases
         return env
 
     # vectorise environment (parallelise)
@@ -85,7 +85,7 @@ def main():
     eval_env = RandomF1TenthMap(eval_env, 500)
     eval_env.seed(np.random.randint(pow(2, 31) - 1))"""
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") #RuntimeError: CUDA error: out of memory whenever I use gpu
-    model = PPO("MlpPolicy", envs,  learning_rate=0.0003, gamma=0.99, gae_lambda=0.95, verbose=1, device='cpu')
+    model = PPO("MlpPolicy", envs,  learning_rate=linear_schedule(0.0003), gamma=0.99, gae_lambda=0.95, verbose=1, device='cpu')
     eval_callback = EvalCallback(envs, best_model_save_path='./train_test/',
                              log_path='./train_test/', eval_freq=5000,
                              deterministic=True, render=False)

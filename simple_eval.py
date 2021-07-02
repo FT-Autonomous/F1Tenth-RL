@@ -24,7 +24,8 @@ eval_env = gym.make("f110_gym:f110-v0",
 
 # wrap evaluation environment
 eval_env = F110_Wrapped(eval_env)
-eval_env = RandomF1TenthMap(eval_env, 1)
+#eval_env = ThrottleMaxSpeedReward(eval_env,0,1,2.5,2.5)
+#eval_env = RandomF1TenthMap(eval_env, 1)
 eval_env.seed(np.random.randint(pow(2, 31) - 1))
 model = PPO.load("./train_test/best_model")
 
