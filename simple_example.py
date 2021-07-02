@@ -25,26 +25,32 @@ Sample python script to show the process of choosing a Stable Baselines model,
 training it with a chosen policy, and then evaluating the trained model on the
 environment while visualising it
 """
+#if getting the module not found error run;
+#pip install --user -e gym/
+#in the f1tenth_gym folder
 
 import gym
 import time
 import numpy as np
-
+import torch
+import os
+import argparse
 from datetime import datetime
-
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import SubprocVecEnv
 from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.common.callbacks import EvalCallback
+from code.wrappers import F110_Wrapped, RandomMap, RandomF1TenthMap, ThrottleMaxSpeedReward
+from code.manus_callbacks import SaveOnBestTrainingRewardCallback
+from code.schedulers import linear_schedule
 
-from code.wrappers import F110_Wrapped, RandomMap
-
-
-TRAIN_STEPS = pow(10, 5)  # for reference, it takes about one sec per 500 steps
-MIN_EVAL_EPISODES = 5
+TRAIN_DIRECTORY = "./train"
+TRAIN_STEPS = 1.5 * np.power(10, 5)    # for reference, it takes about one sec per 500 steps
+SAVE_CHECK_FREQUENCY = int(TRAIN_STEPS / 10)
+MIN_EVAL_EPISODES = 100
 NUM_PROCESS = 4
-MAP_PATH = "./f1tenth_gym/examples/example_map"
+MAP_PATH = "./f1tenth_racetracks/Austin/Austin_map"
 MAP_EXTENSION = ".png"
-
 
 def main():
 
@@ -61,21 +67,32 @@ def main():
                        num_agents=1)
         # wrap basic gym with RL functions
         env = F110_Wrapped(env)
-        env = RandomMap(env, 3000)
+        #env = RandomMap(env, 3000)
+        env = RandomF1TenthMap(env, 3000)
+        #env = ThrottleMaxSpeedReward(env,0,1,2.5,2.5)
+        env = ThrottleMaxSpeedReward(env, 0, int(0.75 * TRAIN_STEPS), 2.5) #this is what eoin used in the code on weights and biases
         return env
 
     # vectorise environment (parallelise)
     envs = make_vec_env(wrap_env,
                         n_envs=NUM_PROCESS,
-                        seed=np.random.randint(pow(2, 32) - 1),
+                        seed=np.random.randint(pow(2, 31) - 1),
                         vec_env_cls=SubprocVecEnv)
 
     # choose RL model and policy here
-    model = PPO("MlpPolicy", envs, verbose=1)
+    """eval_env = gym.make("f110_gym:f110-v0",map=MAP_PATH,map_ext=MAP_EXTENSION,num_agents=1)
+    eval_env = F110_Wrapped(eval_env)
+    eval_env = RandomF1TenthMap(eval_env, 500)
+    eval_env.seed(np.random.randint(pow(2, 31) - 1))"""
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") #RuntimeError: CUDA error: out of memory whenever I use gpu
+    model = PPO("MlpPolicy", envs,  learning_rate=linear_schedule(0.0003), gamma=0.99, gae_lambda=0.95, verbose=1, device='cpu')
+    eval_callback = EvalCallback(envs, best_model_save_path='./train_test/',
+                             log_path='./train_test/', eval_freq=5000,
+                             deterministic=True, render=False)
 
     # train model and record time taken
     start_time = time.time()
-    model.learn(total_timesteps=TRAIN_STEPS)
+    model.learn(total_timesteps=TRAIN_STEPS, callback=eval_callback)
     print(f"Training time {time.time() - start_time:.2f}s")
     print("Training cycle complete.")
 
@@ -89,14 +106,15 @@ def main():
 
     # create evaluation environment (same as train environment in this case)
     eval_env = gym.make("f110_gym:f110-v0",
-                        map="./f1tenth_gym/examples/example_map",
-                        map_ext=".png",
+                        map=MAP_PATH,
+                        map_ext=MAP_EXTENSION,
                         num_agents=1)
 
     # wrap evaluation environment
     eval_env = F110_Wrapped(eval_env)
-    eval_env = RandomMap(eval_env, 1000)
-    eval_env.seed(np.random.randint(pow(2, 32) - 1))
+    eval_env = RandomF1TenthMap(eval_env, 500)
+    eval_env.seed(np.random.randint(pow(2, 31) - 1))
+    model = model.load("./train_test/best_model")
 
     # simulate a few episodes and render them, ctrl-c to cancel an episode
     episode = 0
@@ -106,20 +124,11 @@ def main():
             obs = eval_env.reset()
             done = False
             while not done:
-                # use trained model to predict some action, using observations
                 action, _ = model.predict(obs)
-                obs, _, done, _ = eval_env.step(action)
+                obs, reward, done, _ = eval_env.step(action)
                 eval_env.render()
-            # this section just asks the user if they want to run more episodes
-            if episode == (MIN_EVAL_EPISODES - 1):
-                choice = input("Another episode? (Y/N) ")
-                if choice.replace(" ", "").lower() in ["y", "yes"]:
-                    episode -= 1
-                else:
-                    episode = MIN_EVAL_EPISODES
         except KeyboardInterrupt:
             pass
-
 
 # necessary for Python multi-processing
 if __name__ == "__main__":

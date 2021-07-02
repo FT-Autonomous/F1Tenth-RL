@@ -5,8 +5,9 @@
 .empty
 __pycache__
 
-# config file for VS Code settings
+# config file for VS Code settings / IDE stuff
 .vscode
+.idea/
 
 # docker build log
 dockerfile-build.log
@@ -23,3 +24,7 @@ tmp/
 
 # weights and biases
 wandb/
+
+#train folder
+train_test/
+train/

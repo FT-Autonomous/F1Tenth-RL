@@ -39,7 +39,7 @@ from stable_baselines3.common.vec_env import SubprocVecEnv
 from stable_baselines3.common.env_util import make_vec_env
 
 from code.wrappers import F110_Wrapped, RandomMap
-from code.callbacks import SaveOnBestTrainingRewardCallback
+from code.eoin_callbacks import SaveOnBestTrainingRewardCallback
 
 
 TRAIN_DIRECTORY = "./train"
